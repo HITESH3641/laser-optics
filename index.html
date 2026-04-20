@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laser → Optical Fiber Simulation</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- LASER POPUP MODAL -->
+  <div id="laser-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">⚡ LASER CONFIGURATION</span>
+        <button id="close-modal" class="close-btn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Laser Type -->
+        <div class="config-section">
+          <label class="section-label">LASER TYPE</label>
+          <div class="laser-type-group">
+            <label class="radio-card">
+              <input type="radio" name="laser-type" value="three" checked />
+              <span class="card-inner">
+                <span class="card-title">Three-Level</span>
+                <span class="card-desc">Ruby, Er:YAG</span>
+              </span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="laser-type" value="four" />
+              <span class="card-inner">
+                <span class="card-title">Four-Level</span>
+                <span class="card-desc">Nd:YAG, He-Ne</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Pumping Power -->
+        <div class="config-section">
+          <label class="section-label">PUMPING POWER</label>
+          <div class="slider-row">
+            <input type="range" id="popup-pump" min="0" max="100" value="0" class="styled-slider pump-slider" />
+            <span id="pump-val" class="slider-val">0%</span>
+          </div>
+        </div>
+
+        <!-- Energy Level Diagram -->
+        <div class="config-section">
+          <label class="section-label">ENERGY LEVEL DIAGRAM</label>
+          <div class="energy-diagram">
+            <canvas id="energy-canvas" width="380" height="200"></canvas>
+          </div>
+          <div id="inversion-msg" class="inversion-msg hidden">
+            ✦ POPULATION INVERSION ACHIEVED ✦
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="activate-laser" class="activate-btn" disabled>
+          <span class="btn-glow"></span>
+          ACTIVATE LASER
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="app-wrapper">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <span class="top-title">LASER → OPTICAL FIBER</span>
+      <span class="top-subtitle">Numerical Aperture &amp; TIR Simulation</span>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- SIMULATION CANVAS AREA -->
+      <div class="sim-area">
+        <canvas id="sim-canvas"></canvas>
+
+        <!-- Laser click target -->
+        <div id="laser-trigger" class="laser-trigger" title="Click to configure laser">
+          <div class="laser-body">
+            <div class="laser-label">LASER</div>
+            <div class="laser-icon">◉</div>
+            <div class="laser-hint">click</div>
+          </div>
+        </div>
+
+        <!-- Status overlay -->
+        <div id="status-overlay" class="status-overlay">
+          <span id="status-text">⬤ LASER INACTIVE</span>
+        </div>
+
+        <!-- TIR badge -->
+        <div id="tir-badge" class="tir-badge hidden">TIR ✓</div>
+        <div id="leak-badge" class="leak-badge hidden">LIGHT LEAKING ✗</div>
+      </div>
+
+      <!-- RIGHT CONTROL PANEL -->
+      <div class="control-panel">
+        <div class="panel-title">CONTROLS &amp; DATA</div>
+
+        <div class="panel-section">
+          <div class="param-label">PUMPING POWER</div>
+          <div class="slider-group">
+            <input type="range" id="ctrl-pump" min="0" max="100" value="0" class="styled-slider" disabled />
+            <span id="ctrl-pump-val" class="param-val">0%</span>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="param-label">LASER ANGLE (°)</div>
+          <div class="slider-group">
+            <input type="range" id="ctrl-angle" min="0" max="89" value="15" class="styled-slider" />
+            <span id="ctrl-angle-val" class="param-val">15°</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="panel-section">
+          <div class="param-label">n₁ — CORE INDEX</div>
+          <div class="slider-group">
+           <input type="range" id="ctrl-n1" min="1.34" max="1.54" step="0.01" value="1.46" class="styled-slider" />
+            <span id="ctrl-n1-val" class="param-val">1.62</span>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="param-label">n₂ — CLADDING INDEX</div>
+          <div class="slider-group">
+            <input type="range" id="ctrl-n2" min="1.34" max="1.54" step="0.01" value="1.36" class="styled-slider" />
+            <span id="ctrl-n2-val" class="param-val">1.46</span>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="param-label">FIBER BEND</div>
+          <div class="slider-group">
+            <input type="range" id="ctrl-bend" min="0" max="100" value="0" class="styled-slider" />
+            <span id="ctrl-bend-val" class="param-val">20</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="panel-section computed-section">
+          <div class="computed-row">
+            <span class="computed-label">Numerical Aperture</span>
+            <span id="disp-na" class="computed-val accent">0.000</span>
+          </div>
+          <div class="computed-row">
+            <span class="computed-label">Acceptance Angle</span>
+            <span id="disp-acc" class="computed-val accent">0.0°</span>
+          </div>
+          <div class="computed-row">
+            <span class="computed-label">Critical Angle</span>
+            <span id="disp-crit" class="computed-val">0.0°</span>
+          </div>
+          <div class="computed-row">
+            <span class="computed-label">Attenuation</span>
+            <span id="disp-atten" class="computed-val warn">0.00 dB/km</span>
+          </div>
+          <div class="computed-row">
+            <span class="computed-label">Output Intensity</span>
+            <span id="disp-out" class="computed-val">100%</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="panel-section">
+          <div class="output-bar-label">OUTPUT INTENSITY</div>
+          <div class="output-bar-track">
+            <div id="output-bar" class="output-bar-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="panel-section legend-section">
+          <div class="legend-row"><span class="leg-dot" style="background:#e74c3c"></span> Laser Beam</div>
+          <div class="legend-row"><span class="leg-dot" style="background:#f1c40f"></span> Guided Ray (TIR)</div>
+          <div class="legend-row"><span class="leg-dot" style="background:#3498db"></span> Leaked Ray</div>
+          <div class="legend-row"><span class="leg-dot" style="background:#16a085"></span> Fiber Core</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
