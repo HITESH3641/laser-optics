@@ -395,7 +395,7 @@ function updateHUD(phys) {
   dispNA.textContent    = phys.NAval.toFixed(4);
   dispAcc.textContent   = phys.accAngle.toFixed(1) + '°';
   dispCrit.textContent  = phys.critAngle.toFixed(1) + '°';
-  dispAtten.textContent = phys.totalAtten.toFixed(2) + ' dB/km';
+  dispAtten.textContent = "";
   dispOut.textContent   = phys.outIntensity.toFixed(1) + '%';
   outputBar.style.width = phys.outIntensity + '%';
 
