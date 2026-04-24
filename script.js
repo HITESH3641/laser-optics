@@ -63,21 +63,17 @@ resizeSim();
 function computePhysics() {
   const { n1, n2, angle, bend } = state;
 
-  // n1 has to be bigger than n2 for the fiber to actually guide light
   const guided    = n1 > n2;
   const NAval     = guided ? Math.sqrt(Math.max(0, n1*n1 - n2*n2)) : 0;
   const accAngle  = guided ? Math.asin(Math.min(NAval, 1)) * 180 / Math.PI : 0;
   const critAngle = guided ? Math.asin(Math.min(n2/n1, 1)) * 180 / Math.PI : 90;
 
-  // Check whether the incoming angle is inside the acceptance cone
   const inNA = state.laserActive && (angle <= accAngle) && guided;
 
-  // Simple bend-loss model — 0 to 15 dB/km depending on bend amount
   const bendAtten  = (bend / 100) * 15;
   const baseAtten  = 0.2;
   const totalAtten = baseAtten + bendAtten;
 
-  // Exponential decay over 1 km of fiber; drops to 5% if outside NA
   const rawIntensity = state.laserActive
     ? Math.exp(-totalAtten / 10) * (inNA ? 1 : 0.05)
     : 0;
